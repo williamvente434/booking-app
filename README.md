@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+# booking-app
+=======
 # Le Fauteuil — Backend Stripe
 
 Backend Node.js/Express pour gérer les acomptes Stripe et les rendez-vous.
@@ -128,3 +131,4 @@ git push -u origin main
 3. Lancer `npm start`
 4. Tester le webhook Stripe
 5. Pousser le projet sur GitHub
+>>>>>>> 8ca8af3 (Initial commit)
