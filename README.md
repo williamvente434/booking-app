@@ -1,134 +1,49 @@
-<<<<<<< HEAD
-# booking-app
-=======
 # Le Fauteuil — Backend Stripe
 
-Backend Node.js/Express pour gérer les acomptes Stripe et les rendez-vous.
+## 1. Prérequis
+- Installer Node.js (version 18 ou plus) : https://nodejs.org (choisis "LTS")
+- Vérifier l'installation dans un terminal : `node -v` et `npm -v` doivent afficher un numéro de version
 
-## Prérequis
-- Node.js 18 ou plus
-- npm
-- Un compte Stripe avec une clé API de test
-- Optionnel : Stripe CLI pour tester les webhooks localement
+## 2. Ouvrir le projet dans VSCode
+- Décompresse ce dossier `stripe-backend`
+- Dans VSCode : Fichier > Ouvrir le dossier > sélectionne `stripe-backend`
+- Ouvre un terminal intégré : Terminal > Nouveau terminal
 
-Vérifie l’installation :
-```bash
-node -v
-npm -v
+## 3. Configurer les clés
+- Renomme `.env.example` en `.env`
+- Ouvre `.env` et colle tes vraies clés Stripe (Dashboard Stripe > Developers > API keys)
+- Ne mets JAMAIS ce fichier `.env` sur Git (le `.gitignore` fourni s'en occupe déjà)
+
+## 4. Installer les dépendances
+Dans le terminal VSCode :
 ```
-
-## 1. Ouvrir le projet
-Ouvre le dossier du projet dans VS Code.
-
-## 2. Installer les dépendances
-Dans le terminal du projet :
-```bash
 npm install
 ```
+Ça lit le fichier `package.json` et télécharge tout ce dont le serveur a besoin dans un dossier `node_modules` (à ne jamais committer non plus).
 
-## 3. Configurer les variables d’environnement
-Crée un fichier `.env` à la racine du projet.
-
-Contenu attendu :
-```env
-STRIPE_SECRET_KEY=sk_test_votre_cle_ici
-STRIPE_WEBHOOK_SECRET=whsec_votre_secret_ici
-FRONTEND_URL=http://localhost:5500
-PORT=4000
+## 5. Lancer le serveur
 ```
-
-Important :
-- `STRIPE_SECRET_KEY` vient du dashboard Stripe > Developers > API keys
-- `STRIPE_WEBHOOK_SECRET` vient de Stripe Dashboard > Developers > Webhooks
-- `.env` est ignoré par Git grâce au `.gitignore`
-
-## 4. Lancer le serveur
-```bash
 npm start
 ```
+Tu dois voir : `Serveur lancé sur le port 4000`
 
-Le serveur doit afficher :
-```bash
-Serveur lancé sur le port 4000
+## 6. Tester le webhook en local
+Installe la CLI Stripe (https://stripe.com/docs/stripe-cli), puis dans un DEUXIÈME terminal :
 ```
-
-## 5. Tester les webhooks localement
-Installe la Stripe CLI, puis ouvre un second terminal :
-```bash
 stripe listen --forward-to localhost:4000/webhook
 ```
+Elle t'affiche un `whsec_...` à coller dans ton `.env`.
 
-La commande affiche un secret de type :
-```bash
-whsec_...
+## 7. Mettre sur GitHub
 ```
-
-Copie ce secret dans `.env` en le mettant dans `STRIPE_WEBHOOK_SECRET`.
-
-## 6. Routes disponibles
-- `POST /create-checkout-session` : crée une session Stripe
-- `POST /webhook` : reçoit les événements Stripe
-- `GET /appointments` : liste les rendez-vous
-- `GET /session-status` : vérifie le statut d’une session
-
-## 7. Mettre le projet sur GitHub
-Si le dépôt n’existe pas encore :
-```bash
 git init
 git add .
-git commit -m "Initial commit"
-```
-
-Ensuite, ajoute ton vrai dépôt GitHub :
-```bash
+git commit -m "Backend Stripe initial"
 git branch -M main
-git remote add origin https://github.com/VOTRE-NOM/VOTRE-DEPOT.git
+git remote add origin https://github.com/TON-COMPTE/TON-REPO.git
 git push -u origin main
 ```
+Comme `.env` est dans `.gitignore`, tes clés secrètes ne partiront jamais sur GitHub.
 
-Remplace bien :
-- `VOTRE-NOM` par ton pseudo GitHub
-- `VOTRE-DEPOT` par le nom de ton dépôt
-
-Exemple :
-```bash
-git remote add origin https://github.com/williamvente434/booking-app.git
-```
-
-## 8. Fichiers ignorés
-Le fichier `.gitignore` contient déjà :
-```gitignore
-node_modules/
-.env
-appointments.db
-*.log
-```
-
-Cela évite d’envoyer les clés secrètes et les fichiers sensibles sur GitHub.
-
-## 9. Brancher le frontend
-Dans le front, remplace le paiement simulé par les appels vers ton backend local, par exemple :
-```js
-http://localhost:4000
-```
-
-## 10. Points de vigilance
-- Ne jamais publier `.env` sur GitHub
-- Utiliser des clés Stripe de test en local
-- Vérifier que le webhook Stripe pointe bien vers `localhost:4000/webhook`
-
-## 11. Commandes utiles
-```bash
-git status
-git add .
-git commit -m "Mon message"
-git push -u origin main
-```
-
-## 12. Résumé rapide
-1. Installer les dépendances
-2. Créer `.env`
-3. Lancer `npm start`
-4. Tester le webhook Stripe
-5. Pousser le projet sur GitHub
->>>>>>> 8ca8af3 (Initial commit)
+## 8. Brancher le frontend
+Dans `booking-app.html`, remplace le paiement simulé par le code de `frontend-change.js`, en changeant l'URL par celle de ton backend (en local : `http://localhost:4000`).

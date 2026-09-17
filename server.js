@@ -14,6 +14,13 @@ const cors = require('cors');
 const Stripe = require('stripe');
 const Database = require('better-sqlite3');
 
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.error('❌ STRIPE_SECRET_KEY manquant dans .env — le serveur ne peut pas démarrer correctement.');
+}
+if (!process.env.FRONTEND_URL) {
+  console.error('❌ FRONTEND_URL manquant dans .env — mets par ex. FRONTEND_URL=http://127.0.0.1:5500');
+}
+
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const app = express();
 
@@ -64,23 +71,46 @@ app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
 app.use(cors());
 app.use(express.json());
 
+// --- Route de vérification : ouvre juste http://localhost:4000/test-stripe dans ton navigateur ---
+app.get('/test-stripe', async (req, res) => {
+  try {
+    const balance = await stripe.balance.retrieve();
+    res.send(`
+      <h2>✅ Stripe est bien connecté</h2>
+      <p>Ta clé API fonctionne. Compte en mode ${balance.livemode ? 'LIVE (réel)' : 'TEST'}.</p>
+      <p>Devise disponible : ${balance.available.map(b => b.currency.toUpperCase()).join(', ')}</p>
+    `);
+  } catch (err) {
+    res.status(500).send(`
+      <h2>❌ Stripe n'est PAS connecté</h2>
+      <p><strong>Erreur exacte :</strong> ${err.message}</p>
+      <p>Vérifie ta clé STRIPE_SECRET_KEY dans le fichier .env (copie-la à nouveau depuis le dashboard Stripe avec le bouton presse-papier).</p>
+    `);
+  }
+});
+
 // --- Créer une session de paiement Stripe ---
 app.post('/create-checkout-session', async (req, res) => {
-  const { serviceName, date, time, clientName, clientPhone, depositAmount } = req.body;
-
-  if (!serviceName || !date || !time || !clientName || !depositAmount) {
-    return res.status(400).json({ error: 'Champs manquants' });
-  }
-
-  const appointmentId = 'apt_' + Date.now();
-
-  // On enregistre le rendez-vous en "en attente" AVANT le paiement
-  db.prepare(`
-    INSERT INTO appointments (id, service_name, date, time, client_name, client_phone, deposit_amount, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(appointmentId, serviceName, date, time, clientName, clientPhone || '', depositAmount, Date.now());
+  console.log('📩 Requête reçue sur /create-checkout-session :', req.body);
 
   try {
+    const { serviceName, date, time, clientName, clientPhone, depositAmount } = req.body;
+
+    if (!serviceName || !date || !time || !clientName || !depositAmount) {
+      console.log('⚠️ Champs manquants');
+      return res.status(400).json({ error: 'Champs manquants' });
+    }
+
+    const appointmentId = 'apt_' + Date.now();
+
+    // On enregistre le rendez-vous en "en attente" AVANT le paiement
+    db.prepare(`
+      INSERT INTO appointments (id, service_name, date, time, client_name, client_phone, deposit_amount, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(appointmentId, serviceName, date, time, clientName, clientPhone || '', depositAmount, Date.now());
+
+    console.log('✅ Rendez-vous enregistré en base, création de la session Stripe...');
+
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -97,10 +127,12 @@ app.post('/create-checkout-session', async (req, res) => {
       cancel_url: `${process.env.FRONTEND_URL}/booking-app.html`,
     });
 
+    console.log('✅ Session Stripe créée :', session.url);
     res.json({ url: session.url });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erreur Stripe' });
+    console.error('❌ Erreur dans /create-checkout-session :', err);
+    res.status(500).json({ error: err.message || 'Erreur inconnue côté serveur' });
   }
 });
 
