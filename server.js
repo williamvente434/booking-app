@@ -124,7 +124,7 @@ app.post('/create-checkout-session', async (req, res) => {
       }],
       metadata: { appointment_id: appointmentId },
       success_url: `${process.env.FRONTEND_URL}/confirmation.html?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/booking-app.html`,
+      cancel_url: `${process.env.FRONTEND_URL}/index.html`,
     });
 
     console.log('✅ Session Stripe créée :', session.url);
